@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+</head>
+<body>
+	<div>
+		<div ng-app="pestaDiskon" ng-controller="diskonCtrl">
+			<div class="col-md-3">
+				<input type="text" name="" class="form-control" placeholder="provider" ng-change="change()" ng-model="inputField">
+			</div>
+		<div class="col-md-12">
+			<table class="table table-bordered table-striped" 
+			>
+			<thead>
+				<tr>
+					<th>Discount Id</th>			
+					<th>Provider</th>
+					<th>Description</th>
+					<th>Shop Name</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="discount in filteredData  | orderBy:'+provider'">
+					<td ng-class="checkProvider(discount.provider)">{{discount.discountid}}</td>
+					<td ng-class="checkProvider(discount.provider)">{{discount.provider}}</td>
+					<td ng-class="checkProvider(discount.provider)">{{discount.short_description}}</td>
+					<td ng-class="checkProvider(discount.provider)">{{discount.shop_name}}</td>
+				</tr>
+			</tbody>
+		</table>
+</div>
+<div class="col-md-3">
+	<ul uib-pagination
+      ng-model="currentPage"
+      total-items="totalItems"
+      max-size="maxSize"  
+      boundary-links="true">
+    </ul>
+</div>
+	</div>
+	<script>
+		var app = angular.module("pestaDiskon", ['ui.bootstrap']); 
+		app.controller("diskonCtrl", function($scope, $http) {
+
+			$scope.filteredData = []
+			$scope.currentPage = 0
+			$scope.numPerPage = 10
+			$scope.maxSize = 5;
+			$scope.inputField =''
+
+			$http({
+				method : "GET",
+				url : "https://dev.pestadiskon.com/api/Discounts"
+			}).then(function success(response) {
+				$scope.discounts = response.data.sort((a,b)=>a.provider.localeCompare(b.provider))
+				$scope.filteredData = $scope.discounts.slice(0, $scope.numPerPage)
+				$scope.totalItems = $scope.discounts.length
+
+
+			}, function errorr(response) {
+				$scope.discounts = "couldn't get diskon data"
+			});
+
+			$scope.checkProvider = function(provider) {
+				return provider === 'ovo' ? 'ovo' : 'other'
+			}
+			$scope.$watch('currentPage + numPerPage', function() {
+				let begin = (($scope.currentPage - 1) * $scope.numPerPage)
+				, end = begin + $scope.numPerPage
+				if($scope.inputField == ''){
+				$scope.filteredData = $scope.discounts.slice(begin, end)
+			}else{
+				$scope.filteredData = $scope.searchData.slice(begin, end)
+			}
+			});
+
+			$scope.change = function(){
+				$scope.searchData = $scope.discounts.filter(o => o.provider.includes($scope.inputField))
+				$scope.filteredData = $scope.searchData.slice(0, $scope.numPerPage)
+				$scope.currentPage = 0
+				$scope.totalItems =  $scope.searchData.length
+			}
+		});
+	</script>
+	    <script data-require="ui-bootstrap@*" data-semver="2.5.0" src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.min.js"></script>
+</div>
+</body>
+
+<style type="text/css" scoped>
+.ovo {
+	color: rgb(255, 174, 66);
+}
+td{
+	color: blue;
+}
+</style>
+
